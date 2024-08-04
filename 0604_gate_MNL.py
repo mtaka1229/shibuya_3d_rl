@@ -1,4 +1,4 @@
-# gate choice MNL
+# gate choice MNL 2024/06/04
 # input:diary data
 
 import pandas as pd 
@@ -57,7 +57,7 @@ for i in range(len(df_mezzo_nw)):
         ka = linkid_mezzo_list.index(kan) # linkidがkanのリンクのindex
         length_mat_mezzo[k, a] = (df_mezzo_link.loc[ka, 'length']) # kaはindexなのでこのままでOK
 
-x_dim = 7 # パラメータ数
+x_dim = 6 # パラメータ数
 
 def Dis(lon_error, lat_error):
     R = 6378137
@@ -190,7 +190,7 @@ for i in range(DIARY):
     # 最後にdestination
     dest_id = df_diary.loc[i, 'd'] if odindex == 'd' else df_diary.loc[i, 'o']
 
-    if dest_id == 0:
+    if dest_id == 0: ### 目的地が1-7の候補地以外の場合，各トラジェクトリの最終時点での位置情報を目的地とする
         d_lat = df_diary.loc[i, 'd_lat'] if odindex == 'd' else df_diary.loc[i, 'o_lat']
         d_lon = df_diary.loc[i, 'd_lon'] if odindex == 'o' else df_diary.loc[i, 'o_lon']
         if d_lat == 0 or d_lon == 0:
@@ -245,8 +245,9 @@ print('DIARY', DIARY)
 def fr(x:np.array):
     count__ = 0
     LL = 0
-    x_mezzo_length, x_micro_length, x_level, x_point, x_hachiko, x_chuo, x_minami = x
-    # x_mezzo_length, x_micro_length, x_point, x_hachiko, x_chuo, x_minami = x
+    # x_mezzo_length, x_micro_length, x_level, x_point, x_hachiko, x_chuo, x_minami = x
+    ##### x_mezzo_length, x_micro_length, x_point, x_hachiko, x_chuo, x_minami = x
+    x_mezzo_length, x_level, x_point, x_hachiko, x_chuo, x_minami = x
     for i in range(DIARY): # diaryデータから読み込む
         if not diary_list[i]: # 条件満たさないやつはdiary_list内を空にしてるので飛ばせる
             continue
@@ -271,15 +272,23 @@ def fr(x:np.array):
         point_gate = i_list[12]
         point_amount = i_list[13]/10
 
-        u_hachiko = np.exp((dist_dest_hachi) * x_mezzo_length + (dist_car_hachi) * x_micro_length + x_hachiko  + level_hachi_dum * x_level) 
-        u_chuo = np.exp((dist_dest_chuo) * x_mezzo_length + (dist_car_chuo) * x_micro_length + x_chuo  + level_chuo_dum * x_level)
-        u_minami = np.exp((dist_dest_minami) * x_mezzo_length + (dist_car_minami) * x_micro_length + x_minami + level_minami_dum * x_level)
-        u_newminami = np.exp((dist_dest_newminami) * x_mezzo_length + (dist_car_newminami) * x_micro_length + level_newminami_dum * x_level)
+        # u_hachiko = np.exp((dist_dest_hachi) * x_mezzo_length + (dist_car_hachi) * x_micro_length + x_hachiko  + level_hachi_dum * x_level) 
+        # u_chuo = np.exp((dist_dest_chuo) * x_mezzo_length + (dist_car_chuo) * x_micro_length + x_chuo  + level_chuo_dum * x_level)
+        # u_minami = np.exp((dist_dest_minami) * x_mezzo_length + (dist_car_minami) * x_micro_length + x_minami + level_minami_dum * x_level)
+        # u_newminami = np.exp((dist_dest_newminami) * x_mezzo_length + (dist_car_newminami) * x_micro_length + level_newminami_dum * x_level)
+        
         # u_hachiko = np.exp(np.log(dist_dest_gate) * x_mezzo_length + np.log(dist_car_gate) * x_micro_length + x_hachiko) # + level_dummy * x_level) 
         # u_chuo = np.exp(np.log(dist_dest_gate) * x_mezzo_length + np.log(dist_car_gate) * x_micro_length + x_chuo) # + level_dummy * x_level)
         # u_minami = np.exp(np.log(dist_dest_gate) * x_mezzo_length + np.log(dist_car_gate) * x_micro_length + x_minami) # + level_dummy * x_level)
         # u_newminami = np.exp(np.log(dist_dest_gate) * x_mezzo_length + np.log(dist_car_gate) * x_micro_length) # + level_dummy * x_level)
         
+        ### microなし
+        u_hachiko = np.exp((dist_dest_hachi) * x_mezzo_length + x_hachiko  + level_hachi_dum * x_level) 
+        u_chuo = np.exp((dist_dest_chuo) * x_mezzo_length + x_chuo  + level_chuo_dum * x_level)
+        u_minami = np.exp((dist_dest_minami) * x_mezzo_length + x_minami + level_minami_dum * x_level)
+        u_newminami = np.exp((dist_dest_newminami) * x_mezzo_length + level_newminami_dum * x_level)
+
+
         if point_gate == 1: # ハチ公
             u_hachiko *= np.exp(point_amount * x_point)
         elif point_gate == 2: # 中央
@@ -368,7 +377,8 @@ print(f"R_adj: {R_adj:.4f}")
 print('odindex', odindex)
 
 data_n = {# 'parameter': ['mezzo_length', 'micro_length', 'point', 'hachiko', 'chuo', 'minami'], # 
-        'parameter': ['mezzo_length', 'micro_length', 'level', 'point', 'hachiko', 'chuo', 'minami'],
+        # 'parameter': ['mezzo_length', 'micro_length', 'level', 'point', 'hachiko', 'chuo', 'minami'],
+        'parameter': ['mezzo_length', 'level', 'point', 'hachiko', 'chuo', 'minami'],
         'est.': [f"{num:.2f}" for num in res.x.tolist()],
         't-val': [f"{num:.2f}" for num in tval(res.x).tolist()]}
 

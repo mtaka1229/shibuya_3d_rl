@@ -87,7 +87,7 @@ feature <-  c(-1, 1.5, 0.5, 0.5, 0.8) # 特徴量＝説明変数ということ
 f_init <- rep(0, length=length(feature))
 w_init <- rep(1/OD, length=OD) # ���K���p�����[�^
 
-binit <- c(f_init, w_init)#init parameter # 前半がRL説明変数，後半がOD交通量
+binit <- c(f_init, w_init) # init parameter # 前半がRL説明変数，後半がOD交通量
 n_feature <- length(feature)
 theta <- 1
 TS <- 100
@@ -331,19 +331,20 @@ fr <- function(x){ # ������x
   ZD_ZD_re_list <- ZD_ZD_re(z, z_re)
   
   
-  w <- x[(n_feature+1):length(x)] # ���ꂪ
+  w <- x[(n_feature+1):length(x)] ### xの後ろの方は交通量
   F_link_od <- array(0, dim = c(OD, N, N)) 
   F_transit_od <- array(0, dim = c(OD, N, N))
   
   observe_flow_od <- array(0, dim = c(OD, N, N))
   observe_transit_od <- array(0, dim = c(OD, N, N))
   
+  ### xの前の方はRLのモデルパラメータ
   fe <- exp(length*x[1])*exp(store*x[2])*exp(park*x[3])*exp(building*x[4])*exp(station*x[5])
   flag <- array(1, dim = c(N, 1))
   
   for(od in 1:OD){
     ##observe transit in each od
-    observe_transit_od[od,,] <- observe_transit*q_z[,,od]#q_transit[,,od]
+    observe_transit_od[od,,] <- observe_transit*q_z[,,od] # q_transit[,,od] ### observe_transitは観測された遷移確率, これにq_zをかける
     #observe flow in each od
     observe_flow_od[od,,] <- observe_flow*q_z[,,od] ## 各リンクの観測交通量（経験分布）にq_z(=q(z|x))を掛け，それをodペアの交通量としている
     # time-space prism
@@ -355,21 +356,24 @@ fr <- function(x){ # ������x
 
       rate <- Mts*ZD_ZD_re_list[ts,,,od] # rateはODペアodにおいて各リンク（ノードk→a）を選択する確率
       F_link_od[od,,] <- F_link_od[od,,] + as.array(w[od]*rate/z[1,(1:N)[nodeid==ODlist$O[od]],od])
-      ## z[1,(1:N)[nodeid==ODlist$O[od]],od]はペアodのOにおける期待効用
+      ## ここでwで交通量がパラメタとして動かされる
+      ## z[1,(1:N)[nodeid==ODlist$O[od]],od]はペアodのOにおける期待効用（割り算すればexp内で引かれる）
       ### F_link_od = p(x,z|gsi)
     }
   }
   #transit
   for(i in 1:N){
-    sum <- sum(F_link_od[,i,])#k�ȊO�̎��ӕ��z
-    F_transit_od[,i,]<-F_link_od[,i,]/sum#�SOD���l��������ŁCOD��a|k�̓����m�� #### 
+    sum <- sum(F_link_od[,i,]) ### 遷移を扱っているので元のノードiごとに処理している？？？→条件付きで扱えるようにしているぽい?
+    F_transit_od[,i,]<-F_link_od[,i,]/sum # F_transit_od = p(a,z|k,gsi) 
   }
 
   #flow 
-  F_list <- F_link_od/sum(F_link_od) ##### q(z|x)
+  F_list <- F_link_od/sum(F_link_od) ##### F_slit = p(x,z|gsi)
   
   F_list <- (F_list ==0)*1 + (F_list != 0)*F_list
   F_transit <- (F_transit_od==0)*1 + (F_transit_od!=0)*F_transit_od
+
+  ## 二つのKLを足している
   CE <- sum(observe_transit_od*log(F_transit)) + sum(observe_flow_od*log(F_list))
   
   print(x)
@@ -442,7 +446,7 @@ while(dL_KL >=2){
   q_z <- q_z0
   #print(sum(q_z))
   
-  #m step
+  #m step ### 交通量とモデルパラメータを同時に動かしている
   res <- optim(b0, fr, method = "L-BFGS-B", lower=c(rep(-Inf, length=length(feature)), rep(0.01, length=OD)), upper=c(rep(5, length=length(feature)), rep(0.99, length=OD)), hessian = TRUE, control=list(fnscale=-1))
   
   b <- res$par
