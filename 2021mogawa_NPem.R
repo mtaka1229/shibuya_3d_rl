@@ -198,7 +198,8 @@ TSNW <- function(ODlist){
   return(Ilist)
 }
 print('OK7')
-# calc observe link flow
+
+# calc observe link flow ## ODlistから
 assignment_proposal <- function(ODlist, beta){ ## betaは効用パラメータ（推定対象）
   Ilist <- TSNW(ODlist)
   
@@ -486,12 +487,12 @@ e_flow_ob <-  e_flow*t_flag
 
 #b_flow <- sum(observe_flow)
 w <- b[(n_feature+1):length(b)]#### パラメタベクトルのうち交通量の部分
-w <- w*b_flow/sum(e_flow_ob) 
-b[(n_feature+1):length(b)]<-w  
+w <- w*b_flow/sum(e_flow_ob)  # 推定したwを正規化
+b[(n_feature+1):length(b)]<-w  ## 推定したOD交通量の部分
 
 #RMSE_flow
 RMSE <- sqrt((observe_flow-e_flow_ob*b_flow/sum(e_flow_ob))^2/L)
-cat("RMSE  =")
+cat("RMSE =")
 print(RMSE)
 
 # ���ʂ̕\��
