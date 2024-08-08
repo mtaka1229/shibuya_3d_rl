@@ -411,7 +411,7 @@ message("PROGRAM START!\n")
 observe_flow <- flow #assignment_proposal(ODlist, beta)
 observe_transit <- transit
 b_flow<-sum(observe_flow)
-observe_flow<-observe_flow/b_flow #### 観測交通量を正規化
+observe_flow<-observe_flow/b_flow #### 観測交通量を正規化→それはそう，やっぱり正規化はする！
 ### 以下各関数はobserve_flowをglobal変数として読み込んで処理する
 
 # time space NW
