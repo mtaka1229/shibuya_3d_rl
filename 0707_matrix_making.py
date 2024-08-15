@@ -5,8 +5,8 @@ import csv
 import os 
 
 base_path = '/Users/takahiromatsunaga/res2023/shibuya_nw/shibuya_stanw/ver0707'
-df_link = pd.read_csv(os.path.join(base_path, 'multi_link_post.csv'))
-df_node = pd.read_csv(os.path.join(base_path, 'multi_node_post.csv'))
+df_link = pd.read_csv(os.path.join(base_path, 'multi_link_post_ver0815.csv'))
+df_node = pd.read_csv(os.path.join(base_path, 'multi_node_post_ver0815.csv'))
 
 # network data: どのノードとどのノードが繋がっているか
 df_network = pd.DataFrame(columns=['k', 'a'])
@@ -36,6 +36,8 @@ for i in range(len(df_node)):
     connected_nodes.extend(temp_nodes)
 
     for connected_node in connected_nodes:
-        df_network = df_network.append({'k': nodeid, 'a': connected_node}, ignore_index=True)
+        # df_network = df_network.append({'k': nodeid, 'a': connected_node}, ignore_index=True) #### 非推奨
+        df_network = pd.concat([df_network, pd.DataFrame([{'k': nodeid, 'a': connected_node}])], ignore_index=True)
 
-df_network.to_csv(os.path.join(base_path, 'multi_nodebased_matrix_post.csv')) 
+
+df_network.to_csv(os.path.join(base_path, 'multi_nodebased_matrix_post_ver0815.csv')) 
