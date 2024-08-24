@@ -302,16 +302,18 @@ calc_qz <- function(x,Ilist){
     
     for(ts in 1:TS){
       Mts <- Id[[ts]]*fe
-      
       rate <- Mts*ZD_ZD_re_list[ts,,,od] #### ZD_ZD_re_listが逆状態価値関数な気がするが
       flow <- w[od]*rate/sum(rate) ### w[od]はこのodの交通量（推定対象）
       F_link_od <- F_link_od + as.array(flow) ###### v/sum(v)のやつ！！！ #######
+      # Mts <- Id[[ts]]*fe
+      # rate <- Mts*ZD_ZD_re_list[ts,,,od] # rateはODペアodにおいて各リンク（ノードk→a）を選択する確率
+      # F_link_od[od,,] <- F_link_od[od,,] + as.array(w[od]*rate/z[1,(1:N)[nodeid==ODlist$O[od]],od])
     }
     #flow
     F_link[,,od] <- F_link_od ###### F_link=p(z|x)な気がする ######
   }
 
-  
+
   for(i in 1:N){ # 各ノードについて
     #flow
     sum <- F_link[i,,]%*%flag
@@ -354,7 +356,6 @@ fr <- function(x){ # ������x
     for(ts in 1:TS){
       # instantaneous utility M
       Mts <- Id[[ts]]*fe
-
       rate <- Mts*ZD_ZD_re_list[ts,,,od] # rateはODペアodにおいて各リンク（ノードk→a）を選択する確率
       F_link_od[od,,] <- F_link_od[od,,] + as.array(w[od]*rate/z[1,(1:N)[nodeid==ODlist$O[od]],od])
       ## ここでwで交通量がパラメタとして動かされる
@@ -369,7 +370,7 @@ fr <- function(x){ # ������x
   }
 
   #flow 
-  F_list <- F_link_od/sum(F_link_od) ##### F_slit = p(x,z|gsi)
+  F_list <- F_link_od/sum(F_link_od) ##### F_slit = p(x,z)
   
   F_list <- (F_list ==0)*1 + (F_list != 0)*F_list
   F_transit <- (F_transit_od==0)*1 + (F_transit_od!=0)*F_transit_od
